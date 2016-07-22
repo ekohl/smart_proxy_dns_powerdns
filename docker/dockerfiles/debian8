@@ -1,0 +1,19 @@
+FROM debian:jessie
+EXPOSE 8000
+ENTRYPOINT /usr/share/foreman-proxy/bin/smart-proxy
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y curl && apt-get clean
+RUN echo "deb http://deb.theforeman.org/ jessie stable\ndeb http://deb.theforeman.org/ plugins stable" > /etc/apt/sources.list.d/foreman.list
+RUN curl -s http://deb.theforeman.org/foreman.asc | apt-key add -
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ruby-smart-proxy-dns-powerdns pdns-server && apt-get clean
+
+# Copy generic settings
+COPY ["settings.yml", "/etc/foreman-proxy/"]
+COPY ["dns.yml", "/etc/foreman-proxy/settings.d/dns.yml"]
+
+# DB-specific stuff
+ARG DB
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y pdns-backend-$DB
+COPY ["pdns-${DB}.conf", "/etc/pdns/pdns.conf"]
+COPY ["dns_powerdns-${DB}.yml", "/etc/foreman-proxy/settings.d/dns_powerdns.yml"]
+
+# vim: filetype=dockerfile

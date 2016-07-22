@@ -1,0 +1,7 @@
+---
+:powerdns_pdnssec: pdnssec
+:powerdns_backend: mysql
+:powerdns_mysql_hostname: db
+:powerdns_mysql_username: pdns
+:powerdns_mysql_password: secret
+:powerdns_mysql_database: pdns

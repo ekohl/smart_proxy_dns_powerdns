@@ -38,26 +38,28 @@ class DnsPowerdnsIntegrationTest < Test::Unit::TestCase
       request = Net::HTTP::Post.new(smart_proxy_url + 'dns/')
       request.form_data = data
       response = http.request request
-      assert_equal(200, response.code.to_i)
+      assert_equal(200, response.code.to_i, response.body)
 
       assert_equal([expected], resolver.getresources(name, type))
 
       request = Net::HTTP::Delete.new(smart_proxy_url + 'dns/' + name)
       response = http.request request
-      assert_equal(200, response.code.to_i)
+      assert_equal(200, response.code.to_i, response.body)
 
       assert(purge_cache name)
 
-      assert_equal([], resolver.getresources(name, type))
+      assert_equal([], resolver.getresources(name, type), name)
     end
   end
 
   def resolver
-    Resolv::DNS.new(:nameserver_port => [['127.0.0.1', 5300]])
+    host = ENV['PDNS_HOST'] || '127.0.0.1'
+    port = ENV['PDNS_PORT'] || 5300
+    Resolv::DNS.new(:nameserver_port => [[host, port.to_i]])
   end
 
   def smart_proxy_url
-    'http://localhost:8000/'
+    ENV['SMARTPROXY_URL'] || 'http://localhost:8000/'
   end
 
   def fqdn
@@ -74,7 +76,9 @@ class DnsPowerdnsIntegrationTest < Test::Unit::TestCase
   end
 
   def purge_cache name
-    %x{#{ENV['PDNS_CONTROL'] || "pdns_control"} purge "#{name}"}
-    $? == 0
+    %x{#{ENV['PDNS_CONTROL'] || "pdns_control #{ENV['PDNS_ARGS']}"} purge "#{name}"}
+    sleep 60 unless $? == 0
+    sleep 1
+    true
   end
 end

@@ -1,0 +1,9 @@
+FROM centos:centos7
+RUN yum -y install epel-release && yum -y install pdns pdns-backend-postgresql pdns-backend-mysql && yum clean all
+EXPOSE 53/udp
+EXPOSE 53
+EXPOSE 8081
+EXPOSE 53000
+ENTRYPOINT ["/usr/sbin/pdns_server"]
+
+# vim: filetype=dockerfile

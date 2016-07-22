@@ -1,0 +1,2 @@
+INSERT INTO domains (name, type) VALUES ('example.com', 'master'), ('in-addr.arpa', 'master'), ('ip6.arpa', 'master');
+INSERT INTO records (domain_id, name, type, content) SELECT id domain_id, name, 'SOA', 'ns1.example.com hostmaster.example.com. 0 3600 1800 1209600 3600' FROM domains WHERE NOT EXISTS (SELECT 1 FROM records WHERE records.domain_id=domains.id AND records.name=domains.name AND type='SOA');

@@ -1,0 +1,39 @@
+version: '2'
+services:
+  pdns:
+    build:
+      context: .
+      dockerfile: dockerfiles/pdns
+    volumes:
+      - ./pdns-${DB}.conf:/etc/pdns/pdns.conf
+    links:
+      - db:${DB_PORT}
+    ports:
+      - 53/udp
+      - 53000
+  db:
+    image: ${DB_IMAGE}
+    environment:
+      - POSTGRES_USER=pdns
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=pdns
+      - MYSQL_ROOT_PASSWORD=verysecret
+      - MYSQL_USER=pdns
+      - MYSQL_PASSWORD=secret
+      - MYSQL_DATABASE=pdns
+    volumes:
+      - ./create-database-${DB}.sql:/docker-entrypoint-initdb.d/01-create-database.sql
+      - ./create-zones.sql:/docker-entrypoint-initdb.d/02-create-zones.sql
+  smartproxy:
+    build:
+      context: .
+      dockerfile: dockerfiles/${OS}
+      args:
+        - DB=${DB}
+        - FOREMAN_CUSTOM_URL=${FOREMAN_CUSTOM_URL}
+    volumes:
+      - ./pdns-${DB}.conf:/etc/pdns/pdns.conf
+    links:
+      - db:${DB_PORT}
+    ports:
+      - 8000

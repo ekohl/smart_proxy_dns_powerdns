@@ -1,0 +1,4 @@
+---
+:powerdns_pdnssec: pdnssec
+:powerdns_backend: postgresql
+:powerdns_postgresql_connection: host=db user=pdns password=secret dbname=pdns

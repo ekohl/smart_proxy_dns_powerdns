@@ -1,0 +1,19 @@
+FROM centos:centos6
+EXPOSE 8000
+ENTRYPOINT /usr/share/foreman-proxy/bin/smart-proxy
+ENV FOREMAN_RELEASE=https://yum.theforeman.org/releases/latest/el6/x86_64/foreman-release.rpm
+ARG FOREMAN_CUSTOM_URL=
+RUN if [ -n "$FOREMAN_CUSTOM_URL" ] ; then echo -e "[foreman-custom]\nname=foreman-custom\nenabled=1\ngpgcheck=0\nbaseurl=${FOREMAN_CUSTOM_URL}\n" > /etc/yum.repos.d/foreman-custom.repo ; fi
+RUN yum -y install epel-release $FOREMAN_RELEASE && yum clean all
+RUN yum -y install rubygem-smart_proxy_dns_powerdns pdns pdns-backend-mysql pdns-backend-postgresql && yum clean all
+
+# Copy generic settings
+COPY ["settings.yml", "/etc/foreman-proxy/"]
+COPY ["dns.yml", "/etc/foreman-proxy/settings.d/dns.yml"]
+
+# DB-specific stuff
+ARG DB
+COPY ["pdns-${DB}.conf", "/etc/pdns/pdns.conf"]
+COPY ["dns_powerdns-${DB}.yml", "/etc/foreman-proxy/settings.d/dns_powerdns.yml"]
+
+# vim: filetype=dockerfile
